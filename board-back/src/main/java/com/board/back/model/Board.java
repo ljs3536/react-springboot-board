@@ -31,13 +31,13 @@ public class Board {
 	@Column(name = "contents")
 	private String contents;
 	
-	@Column(name = "memberid")
+	@Column(name = "member_no")
 	private String memberNo;
 	
-	@Column(name = "createdtime")
+	@Column(name = "created_time")
 	private Date createdTime;
 	
-	@Column(name = "updatedtime")
+	@Column(name = "updated_time")
 	private Date updatedTime;
 	
 	@Column(name = "likes")

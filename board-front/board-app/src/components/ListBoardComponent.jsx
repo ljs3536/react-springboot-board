@@ -1,26 +1,99 @@
 import React, { Component } from 'react';
 import BoardService from '../service/BoardService';
+import Pagination from "@material-ui/lab/Pagination";
 
 class ListBoardComponent extends Component {
     constructor(props) {
         super(props)
 
+        this.onChangeSearchTitle = this.onChangeSearchTitle.bind(this);
+        this.retrieveBoards = this.retrieveBoards.bind(this);
+        // this.refreshList = this.refreshList.bind(this);
+        this.handlePageChange = this.handlePageChange.bind(this);
+        this.handlePageSizeChange = this.handlePageSizeChange.bind(this);
+        
         this.state = { 
-            boards: []
-        }
-		
+            boards: [],
+            currentBoard: null,
+            currentIndex: -1,
+            searchTitle: "",
+
+            page: 1,
+            count: 0,
+            pageSize: 3,
+        };
+		this.pageSizes=[3, 6, 9];
+
 		this.createBoard = this.createBoard.bind(this);
     }
 
     componentDidMount() {
-        BoardService.getBoards().then((res) => {
-            this.setState({ boards: res.data});
+        this.retrieveBoards();
+    }
+    
+    onChangeSearchTitle(e) {
+        const searchTitle = e.target.value;
+    
+        this.setState({
+          searchTitle: searchTitle,
         });
     }
-	
-	
+
+    getRequestParams(searchTitle, page, pageSize) {
+        let params = {};
+    
+        if (searchTitle) {
+          params["title"] = searchTitle;
+        }
+    
+        if (page) {
+          params["page"] = page - 1;
+        }
+    
+        if (pageSize) {
+          params["size"] = pageSize;
+        }
+    
+        return params;
+    }
+    
+    retrieveBoards() {
+    const { searchTitle, page, pageSize } = this.state;
+    const params = this.getRequestParams(searchTitle, page, pageSize);
+        BoardService.getBoards(params).then((res) => {
+            const {content, totalPages } = res.data;
+            this.setState({ 
+                boards: content,
+                count : totalPages,
+            });
+
+        });
+    }
+
+    handlePageChange(event, value) {
+        this.setState(
+          {
+            page: value,
+          },
+          () => {
+            this.retrieveBoards();
+          }
+        );
+    }
+    
+    handlePageSizeChange(event) {
+        this.setState(
+            {
+            pageSize: event.target.value,
+            page: 1
+            },
+            () => {
+            this.retrieveBoards();
+            }
+        );
+    }
 	createBoard() {
-        this.props.history.push('/create-board/');
+        this.props.history.push('/create-board/_create');
     }
 	
 	readBoard(no) {
@@ -28,10 +101,57 @@ class ListBoardComponent extends Component {
     }
 
     render() {
+        const {
+            searchTitle,
+            page,
+            count,
+            pageSize,
+          } = this.state;
         return (
             <div>
                 <h2 className="text-center">Boards List</h2>
-				# 3
+                <div className="input-group mb-3">
+                <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search by title"
+                    value={searchTitle}
+                    onChange={this.onChangeSearchTitle}
+                />
+                </div>
+                <div className="input-group-append">
+                <button
+                    className="btn btn-outline-secondary"
+                    type="button"
+                    onClick={this.retrieveTutorials}
+                >
+                Search
+                </button>
+                </div>
+                <div className="col-md-6">
+
+                    <div className="mt-3">
+                        {"Items per Page: "}
+                        <select onChange={this.handlePageSizeChange} value={pageSize}>
+                        {this.pageSizes.map((size) => (
+                            <option key={size} value={size}>
+                            {size}
+                            </option>
+                        ))}
+                        </select>
+
+                        <Pagination
+                        className="my-3"
+                        count={count}
+                        page={page}
+                        siblingCount={1}
+                        boundaryCount={1}
+                        variant="outlined"
+                        shape="rounded"
+                        onChange={this.handlePageChange}
+                        />
+                    </div>
+                </div>
 				<div className = "row">
                     <button className="btn btn-primary" onClick={this.createBoard}> 글 작성</button>
                 </div>
